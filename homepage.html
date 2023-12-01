@@ -9,6 +9,7 @@
 <h1>Dokumentation av det här APIet</h1>
 <h2>Routes</h2>
 
+<h3>G-delen</h3>
 <p><b>Läser från databasen:</b> </p>
 <ul>
     <li>
@@ -23,9 +24,49 @@
 <p><b>Skriver i databasen:</b></p>
 <ul>
     <li>
-        <em>POST /users</em> - skapar en ny användare accepterar JSON objekt på formatet {"firstname": "", "lastname": "", "userId": "unikt namn", "passwd": ""}. <code>userId</code> är obligatoriskt.
+        <em>POST /users</em> - skapar en ny användare accepterar JSON objekt på formatet {"firstname": "", "lastname": "", "username": "", "password": "", "email": ""}. <code>userId</code> är obligatoriskt.
     </li>
 </ul>
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+<h3>VG-delen</h3>
+<p><b>Validera in data:</b></p>
+<ul>
+    <li>
+        <em>POST /users</em> - skapar en ny användare accepterar JSON objekt på formatet {"email": "", "name": "", "username": "unikt namn", "password": ""}. <code>username</code> är obligatoriskt, annars skickas 422-meddelande (unprocessable entity).
+    </li>
+</ul>
+
+<p><b>Uppdaterar data med PUT:</b></p>
+<ul>
+    <li>
+        <em>PUT /users/:id</em> - uppdaterar användaren med angivet id, accepterar JSON-objekt på formatet {"name": "", "password": "", "email": ""}.
+    </li>
+</ul>
+
+<p><b>Säker lagring av lösenord:</b></p>
+<ul>
+    <li>
+        POST /users</em> - skapar en ny användare med hashat lösenord, accepterar JSON objekt på formatet {"name": "", "password": "", "username": "unikt namn", "email": ""}. <code>userId</code> är obligatoriskt.
+    </li>
+
+    <li>
+        <em>POST /login</em> - inloggning, accepterar JSON-objekt på formatet {"username": "", "password": ""}.
+    </li>
+</ul>
+
+<p><b>Säkerhet med tokens:</b></p>
+<ul>
+    <li>
+        <em>GET /users</em> - returnerar alla användare. Endast för autentiserade användare.
+    </li>
+
+    <li>
+        <em>POST /login</em> - inloggning, accepterar JSON-objekt på formatet {"username": "", "password": ""}. Returnerar en token vid framgångsrik inloggning.
+    </li>
+</ul>
+
 
 </body>
 </html>

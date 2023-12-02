@@ -24,10 +24,6 @@ app.get("/", function (req, res) {
 app.post("/users", async function (req, res) {
   const fields = ["firstname", "lastname", "username", "password", "email"];
 
-  if (!req.body.username) {
-    res.status(400).send("username required!");
-    return;
-  }
   console.log("user:", req.body);
 
   const missingFields = fields
@@ -51,12 +47,12 @@ app.post("/users", async function (req, res) {
 const COLUMNS = ["id", "firstname", "lastname", "username", "password", "email"];
 
 app.get("/users", function (req, res) {
-  let authHeader = req.headers["authorization"];
-  if (authHeader === undefined) {
+  let authorizationHeader = req.headers["authorization"];
+  if (authorizationHeader === undefined) {
     res.sendStatus(400);
     return;
   }
-  let token = authHeader.slice(7);
+  let token = authorizationHeader.slice(7);
 
   console.log(token);
 
@@ -65,7 +61,7 @@ app.get("/users", function (req, res) {
     decoded = jwt.verify(token, "EnHemlighetSomIngenKanGissaXyz123%&/");
   } catch (err) {
     console.log(err);
-    res.status(401).send("Invalid auth token");
+    res.status(401).send("Invalid authorization token");
     return;
   }
 
@@ -99,12 +95,16 @@ app.put("/users/:id", function (req, res) {
     res.sendStatus(400);
     return;
   }
+  
+  // Vill att det nya lösenordet ska bli hashat om man ska uppdatera det
+  const hashedPassword = hash(req.body.password);
+
   let sql = `UPDATE users 
         SET firstname = '${req.body.firstname}', 
         lastname = '${req.body.lastname}', 
         username = '${req.body.username}', 
         email = '${req.body.email}', 
-        password = '${req.body.password}'
+        password = '${hashedPassword}'
         WHERE id = ${req.params.id}`;
 
   con.query(sql, function (err, result, fields) {
@@ -117,6 +117,8 @@ app.put("/users/:id", function (req, res) {
 });
 
 app.post("/login", function (req, res) {
+console.log(req.body);
+
   if (!(req.body && req.body.username && req.body.password)) {
     res.sendStatus(400);
     return;
@@ -126,10 +128,6 @@ app.post("/login", function (req, res) {
 
   con.query(sql, function (err, result, fields) {
     if (err) throw err;
-    if (result.length == 0) {
-      res.sendStatus(401);
-      return;
-    }
 
     let passwordHash = hash(req.body.password);
 
@@ -138,10 +136,10 @@ app.post("/login", function (req, res) {
         subObject: createSubObject(result)
       });
 
-      let payload = {
+      let information = {
         subObject: createSubObject(result)
       };
-      let token = jwt.sign(payload, "OMGvadskamanhaförhemligtlösenord-1234?");
+      let token = jwt.sign(information, "OMGvadskamanhaförhemligtlösenord-1234?");
       res.json(token);
 
     } else {
@@ -150,8 +148,7 @@ app.post("/login", function (req, res) {
   });
 });
 
-// Functions
-
+//Funktioner
 const createSubObject = (result) => ({
   sub: result[0].username,
   firstname: result[0].firstname,
@@ -198,7 +195,6 @@ const sqlUsers = async (req, res) => {
   });
 };
 
-
 const isValidUserData = (body) => {
   return body && body.firstname && body.lastname && body.username && body.password &&  body.email;
 
@@ -214,17 +210,4 @@ const handleError = (err, res) => {
   console.error(err);
   res.status(500).send("Internal Server Error");
 };
-
-
-// const result = await con.query(sql);
-// const output = {
-//   id: result[0].insertId,
-//   firstname: req.body.firstname,
-//   lastname: req.body.lastname,
-//   username: req.body.username,
-//   password: req.body.password,
-//   email: req.body.email,
-// };
-
-// res.json(output);
 

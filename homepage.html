@@ -6,7 +6,7 @@
     <title>API</title>
 </head>
 <body>
-<h1>Dokumentation av det här APIet</h1>
+<h1>Dokumentation av API-Bas Server</h1>
 <h2>Routes</h2>
 
 <h3>G-delen</h3>
@@ -34,30 +34,34 @@
 <p><b>Validera in data:</b></p>
 <ul>
     <li>
-        <em>POST /users</em> - skapar en ny användare accepterar JSON objekt på formatet {"email": "", "name": "", "username": "unikt namn", "password": ""}. <code>username</code> är obligatoriskt, annars skickas 422-meddelande (unprocessable entity).
+        <em>POST /users</em> - skapar en ny användare accepterar JSON objekt på formatet {"firstname": "", "lastname": "", "username": "", "password": "", "email": ""}. <code>username</code> <br>VAD ÄR CODE I KODEN <br><br>
+        är obligatoriskt, annars skickas 422-meddelande (unprocessable entity).
     </li>
 </ul>
 
 <p><b>Uppdaterar data med PUT:</b></p>
 <ul>
     <li>
-        <em>PUT /users/:id</em> - uppdaterar användaren med angivet id, accepterar JSON-objekt på formatet {"name": "", "password": "", "email": ""}.
+        <em>PUT /users/:id</em> - uppdaterar användaren med angivet id, accepterar JSON-objekt på formatet {"lastname": "", "username": "", "password": "", "email": ""}.
     </li>
 </ul>
 
 <p><b>Säker lagring av lösenord:</b></p>
 <ul>
     <li>
-        POST /users</em> - skapar en ny användare med hashat lösenord, accepterar JSON objekt på formatet {"name": "", "password": "", "username": "unikt namn", "email": ""}. <code>userId</code> är obligatoriskt.
+        POST /users</em> - skapar en ny användare med hashat lösenord, accepterar JSON objekt på formatet {"firstname": "", "lastname": "", "username": "", "password": "", "email": ""}. <code>userId</code> är obligatoriskt. <br>
+        SKA MAN GÖRA BÅDA POST/user????
     </li>
-
+<br>
     <li>
-        <em>POST /login</em> - inloggning, accepterar JSON-objekt på formatet {"username": "", "password": ""}.
+        <em>POST /login</em> - inloggning, accepterar JSON-objekt på formatet {"username": "", "password": ""} och den skickar tillbaka "username", "firstname", "lastname" och "email".
     </li>
 </ul>
 
 <p><b>Säkerhet med tokens:</b></p>
 <ul>
+    HUR FÅR MAN UT DEN I INSOMNIA?
+    <br>
     <li>
         <em>GET /users</em> - returnerar alla användare. Endast för autentiserade användare.
     </li>

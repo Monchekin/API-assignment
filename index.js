@@ -21,6 +21,7 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + "/homepage.html");
 });
 
+// Skapar användare
 app.post("/users", async function (req, res) {
   const fields = ["firstname", "lastname", "username", "password", "email"];
 
@@ -44,29 +45,38 @@ app.post("/users", async function (req, res) {
   }
 });
 
+// Loggar in 
+app.post("/login", function (req, res) {
+  console.log(req.body);
+  
+    if (!(req.body && req.body.username && req.body.password)) {
+      res.sendStatus(400);
+      return;
+    }
+  
+    let sql = `SELECT * FROM users WHERE username='${req.body.username}'`;
+  
+    con.query(sql, function (err, result, fields) {
+      if (err) throw err;
+      let passwordHash = hash(req.body.password);
+  
+      if (result[0].password == passwordHash) {
+        let information = {
+          subObject: createSubObject(result)
+        };
+        let token = jwt.sign(information, "OMGvadskamanhaförhemligtlösenord-1234?");
+        res.json(token);
+      } else {
+        res.sendStatus(401);
+      }
+    });
+  });
+
 const COLUMNS = ["id", "firstname", "lastname", "username", "password", "email"];
 
+// Kan se alla användare om man är authorized
 app.get("/users", function (req, res) {
-  let authorizationHeader = req.headers["authorization"];
-  if (authorizationHeader === undefined) {
-    res.sendStatus(400);
-    return;
-  }
-  let token = authorizationHeader.slice(7);
-
-  console.log(token);
-
-  let decoded;
-  try {
-    decoded = jwt.verify(token, "EnHemlighetSomIngenKanGissaXyz123%&/");
-  } catch (err) {
-    console.log(err);
-    res.status(401).send("Invalid authorization token");
-    return;
-  }
-
-  console.log(decoded);
-  console.log(`Tjena ${decoded.firstname}! Din mailadress är ${decoded.email}.`);
+  authorization(req);
 
   let sql = "SELECT * FROM users";
   let condition = createCondition(req.query);
@@ -77,7 +87,10 @@ app.get("/users", function (req, res) {
   });
 });
 
+// Kan se specifika användare om man är authorized
 app.get("/users/:id", function (req, res) {
+  authorization(req);
+  
   let sql = "SELECT * FROM users WHERE id=" + req.params.id;
   console.log(sql);
 
@@ -90,17 +103,20 @@ app.get("/users/:id", function (req, res) {
   });
 });
 
+// Ändra information hos användare (kan endast göras om man är authorized)
 app.put("/users/:id", function (req, res) {
-  if (!(req.body && req.body.firstname && req.body.email && req.body.password)) {
+  authorization(req);
+
+  if (!(req.body && req.body.lastname && req.body.username && req.body.email && req.body.password)) {
     res.sendStatus(400);
     return;
   }
   
-  // Vill att det nya lösenordet ska bli hashat om man ska uppdatera det
+  // Det nya lösenordet ska bli hashat om man ska uppdatera det
   const hashedPassword = hash(req.body.password);
 
   let sql = `UPDATE users 
-        SET firstname = '${req.body.firstname}', 
+        SET 
         lastname = '${req.body.lastname}', 
         username = '${req.body.username}', 
         email = '${req.body.email}', 
@@ -111,42 +127,14 @@ app.put("/users/:id", function (req, res) {
     if (err) {
       throw err;
     } else {
-      res.status(200).send('Allt funkar som det ska');
-    }
+      res.status(200).send('Dina ändringar är gjorda');
+    } 
+      
+    
   });
 });
 
-app.post("/login", function (req, res) {
-console.log(req.body);
 
-  if (!(req.body && req.body.username && req.body.password)) {
-    res.sendStatus(400);
-    return;
-  }
-
-  let sql = `SELECT * FROM users WHERE username='${req.body.username}'`;
-
-  con.query(sql, function (err, result, fields) {
-    if (err) throw err;
-
-    let passwordHash = hash(req.body.password);
-
-    if (result[0].password == passwordHash) {
-      res.send({
-        subObject: createSubObject(result)
-      });
-
-      let information = {
-        subObject: createSubObject(result)
-      };
-      let token = jwt.sign(information, "OMGvadskamanhaförhemligtlösenord-1234?");
-      res.json(token);
-
-    } else {
-      res.sendStatus(401);
-    }
-  });
-});
 
 //Funktioner
 const createSubObject = (result) => ({
@@ -210,4 +198,26 @@ const handleError = (err, res) => {
   console.error(err);
   res.status(500).send("Internal Server Error");
 };
+
+const authorization = (req) => {
+  let authorizationHeader = req.headers["authorization"];
+  if (authorizationHeader === undefined) {
+    res.sendStatus(400);
+    return;
+  }
+  let token = authorizationHeader.slice(7);
+
+  console.log(token);
+
+  let decoded;
+  try {
+
+    decoded = jwt.verify(token, "OMGvadskamanhaförhemligtlösenord-1234?");
+
+  } catch (err) {
+    console.log(err);
+    res.status(401).send("Invalid authorization token");
+    return;
+  }
+}
 
